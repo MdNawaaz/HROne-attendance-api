@@ -1,0 +1,8 @@
+# REVIEW.md
+
+| # | Where (function / line) | What is wrong | How you'd notice it (test, input, or symptom) | How you fixed it |
+|---|---|---|---|---|
+| 1 | `compute_late_minutes` | Naive datetime comparison and incorrect 10-minute grace window implementation. | Test with a punch-in exactly 11 minutes after shift start; it failed to compute accurate minutes. | Replaced with explicit IST timezone awareness and accurate floor minute calculations following rule R2[cite: 32]. |
+| 2 | `punch_in` | Missing database unique index check for `(emp_code, date)`, leading to duplicate punch-ins under concurrency. | Send two parallel/simultaneous punch-in requests for the same employee[cite: 32]. | Added unique compound index on `(emp_code, date)` and handled duplicate key exceptions with status code 409[cite: 31, 32]. |
+| 3 | `list_attendance` | In-memory sorting and python list slicing used instead of database-level pagination and sorting. | Test with 100,000 documents; performance degrades drastically or causes high memory usage[cite: 32]. | Switched to MongoDB native `.sort()`, `.skip()`, and `.limit()` queries backed by indexes[cite: 31, 32]. |
+| 4 | `compute_overtime` | Overtime calculated without checking the 30-minute minimum threshold rule. | Punch out 15 minutes after shift end; it incorrectly added overtime minutes[cite: 32]. | Added explicit condition to enforce Rule R3 (minimum 30 minutes required)[cite: 32]. |

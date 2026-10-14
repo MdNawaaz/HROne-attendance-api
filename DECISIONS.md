@@ -1,0 +1,7 @@
+# DECISIONS.md
+
+1. **Indexes:** Created unique indexes on `employees(emp_code)` and `attendance_logs(emp_code, date)`, plus an index on `attendance_logs(date)` for fast range queries and analytics aggregation[cite: 31, 32]. Considered but rejected indexing history fields due to write overhead[cite: 32].
+2. **Punch-in race:** Handled via MongoDB's unique compound index on `(emp_code, date)`. When two identical requests arrive simultaneously, exactly one insert succeeds with 201, while the concurrent attempt triggers a duplicate key error caught and returned as 409[cite: 31, 32].
+3. **Ties:** The late leaderboard sorts primarily by total late minutes descending, and secondarily by `emp_code` ascending. Tied rows share the same rank, and subsequent ranks skip appropriately (1, 2, 2, 4)[cite: 32].
+4. **Headcount:** Department summary performs a lookup across collections or matches employees whose `joined_on` date falls on or before the period end, ensuring employees with zero logs are correctly included[cite: 31, 32].
+5. **Scale-up:** At 100x data, I would introduce read replicas for heavy analytics pipelines and implement Redis caching for frequent employee lookups and leaderboards[cite: 32].
